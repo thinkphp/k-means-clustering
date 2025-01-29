@@ -24,7 +24,7 @@ npx shadcn@latest init
 
 3. Install required shadcn/ui components:
 ```bash
-npx shadcn-ui@latest add slider button card
+npx shadcn@latest add slider button card
 ```
 
 ## Project Structure
