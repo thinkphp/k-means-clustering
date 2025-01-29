@@ -1,31 +1,38 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
-const KMeansClustering = () => {
-  const [points, setPoints] = useState([]);
-  const [centroids, setCentroids] = useState([]);
-  const [numClusters, setNumClusters] = useState(3);
-  const [isRunning, setIsRunning] = useState(false);
+interface Point {
+  x: number;
+  y: number;
+  clusterId?: number;
+}
+
+const KMeansClustering: React.FC = () => {
+  const [points, setPoints] = useState<Point[]>([]);
+  const [centroids, setCentroids] = useState<Point[]>([]);
+  const [numClusters, setNumClusters] = useState<number>(3);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
 
   // Initialize random centroids
-  const initializeCentroids = () => {
-    const newCentroids = Array(numClusters).fill(0).map(() => ({
+  const initializeCentroids = useCallback(() => {
+    const newCentroids: Point[] = Array(numClusters).fill(0).map(() => ({
       x: Math.random() * 600,
       y: Math.random() * 400,
     }));
     setCentroids(newCentroids);
-  };
+  }, [numClusters]);
 
   // Calculate distance between two points
-  const distance = (p1, p2) => {
+  const distance = useCallback((p1: Point, p2: Point): number => {
     return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-  };
+  }, []);
 
   // Assign points to nearest centroid
-  const assignPointsToClusters = () => {
+  const assignPointsToClusters = useCallback(() => {
     return points.map(point => {
       const distances = centroids.map((centroid, idx) => ({
         distance: distance(point, centroid),
@@ -36,10 +43,10 @@ const KMeansClustering = () => {
       );
       return { ...point, clusterId: nearest.clusterId };
     });
-  };
+  }, [points, centroids, distance]);
 
   // Update centroid positions
-  const updateCentroids = (clusteredPoints) => {
+  const updateCentroids = useCallback((clusteredPoints: Point[]) => {
     return centroids.map((_, idx) => {
       const clusterPoints = clusteredPoints.filter(p => p.clusterId === idx);
       if (clusterPoints.length === 0) return centroids[idx];
@@ -48,31 +55,33 @@ const KMeansClustering = () => {
       const avgY = clusterPoints.reduce((sum, p) => sum + p.y, 0) / clusterPoints.length;
       return { x: avgX, y: avgY };
     });
-  };
+  }, [centroids]);
 
   // Run one iteration of k-means
-  const runIteration = () => {
+  const runIteration = useCallback(() => {
     if (!isRunning) return;
     
     const clusteredPoints = assignPointsToClusters();
     const newCentroids = updateCentroids(clusteredPoints);
     setPoints(clusteredPoints);
     setCentroids(newCentroids);
-  };
+  }, [isRunning, assignPointsToClusters, updateCentroids]);
 
   // Handle canvas click to add points
-  const handleCanvasClick = (e) => {
-    const rect = e.target.getBoundingClientRect();
+  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    setPoints([...points, { x, y }]);
-  };
+    setPoints(prev => [...prev, { x, y }]);
+  }, []);
 
   // Effect for running the algorithm
   useEffect(() => {
+    if (!isRunning) return;
+    
     const interval = setInterval(runIteration, 500);
     return () => clearInterval(interval);
-  }, [isRunning, points, centroids]);
+  }, [isRunning, runIteration]);
 
   // Colors for different clusters
   const clusterColors = [
