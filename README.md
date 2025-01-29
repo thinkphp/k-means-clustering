@@ -32,11 +32,19 @@ npx shadcn@latest add slider button card
 Add the component to your Next.js project:
 
 ```plaintext
-app/
-├── components/
-│   └── kmeans-clustering.tsx
-├── page.tsx
-└── layout.tsx
+kmeans-clustering/
+├── src
+  ├── lib
+  ├── app
+      ├── page.tsx
+      └── layout.tsx
+      └── globals.css
+  ├── components/
+  |   └── ui
+  |       └── button.tsx
+  |       └── card.tsx
+  |       └── slider.tsc
+  │   └── kmeans-clustering.tsx
 ```
 
 ## Component Implementation
